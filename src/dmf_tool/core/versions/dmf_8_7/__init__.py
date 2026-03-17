@@ -26,7 +26,8 @@ class DMF87Bundle(VersionBundle):
 
     @property
     def template_dir(self) -> Path:
-        return Path(__file__).resolve().parent / "templates"
+        # 8.7 currently reuses the 8.8 template set conservatively.
+        return Path(__file__).resolve().parent.parent / "dmf_8_8" / "templates"
 
     @property
     def minimum_workbook_schema_version(self) -> str:

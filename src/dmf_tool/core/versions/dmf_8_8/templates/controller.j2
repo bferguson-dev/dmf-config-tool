@@ -1,0 +1,8 @@
+controller {{ controller.name }}
+  management-ip {{ controller.management_ip }}
+  cluster-name {{ controller.cluster_name }}
+  role {{ controller.role }}
+  {% if controller.ha_peer %}ha-peer {{ controller.ha_peer }}{% endif %}
+  site {{ controller.site_name }}
+  {% if controller.description %}description {{ controller.description }}{% endif %}
+exit

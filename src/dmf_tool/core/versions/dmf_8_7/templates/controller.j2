@@ -1,0 +1,44 @@
+{% for controller in fabric.controllers %}
+controller {{ controller.name }}
+  management-ip {{ controller.management_ip }}
+  cluster-name {{ controller.cluster_name }}
+  role {{ controller.role }}
+  {% if controller.ha_peer %}ha-peer {{ controller.ha_peer }}{% endif %}
+  site {{ controller.site_name }}
+  {% if controller.description %}description {{ controller.description }}{% endif %}
+exit
+{% endfor %}
+{% for switch in fabric.switches %}
+switch {{ switch.name }}
+  management-ip {{ switch.management_ip }}
+  role {{ switch.role }}
+  site {{ switch.site_name }}
+  {% if switch.model %}model {{ switch.model }}{% endif %}
+  {% if switch.description %}description {{ switch.description }}{% endif %}
+exit
+{% endfor %}
+{% for interface in fabric.interfaces %}
+interface {{ interface.switch_name }} {{ interface.name }}
+  role {{ interface.role }}
+  {% if interface.description %}description {{ interface.description }}{% endif %}
+  {% if interface.speed %}speed {{ interface.speed }}{% endif %}
+  {% if interface.vlan_id %}vlan {{ interface.vlan_id }}{% endif %}
+  enabled {{ "true" if interface.enabled else "false" }}
+exit
+{% endfor %}
+{% for group in fabric.groups %}
+interface-group {{ group.name }}
+  role {{ group.role }}
+{% for member in group.members %}
+  member {{ member }}
+{% endfor %}
+exit
+{% endfor %}
+{% for policy in fabric.policies %}
+policy {{ policy.name }}
+  priority {{ policy.priority }}
+  action {{ policy.action }}
+  enabled {{ "true" if policy.enabled else "false" }}
+  {% if policy.source_interface %}source-interface {{ policy.source_interface }}{% endif %}
+  {% if policy.delivery_interface %}delivery-interface {{ policy.delivery_interface }}{% endif %}
+{% endfor %}

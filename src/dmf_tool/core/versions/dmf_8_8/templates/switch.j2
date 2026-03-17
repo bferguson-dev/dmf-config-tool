@@ -1,0 +1,7 @@
+switch {{ switch.name }}
+  management-ip {{ switch.management_ip }}
+  role {{ switch.role }}
+  site {{ switch.site_name }}
+  {% if switch.model %}model {{ switch.model }}{% endif %}
+  {% if switch.description %}description {{ switch.description }}{% endif %}
+exit

@@ -1,0 +1,66 @@
+{% include "provenance_header.j2" %}
+{% if fabric.controllers %}
+! BEGIN CONTROLLERS
+{% for controller in fabric.controllers %}
+{% include "controller.j2" %}
+{% endfor %}
+! END CONTROLLERS
+{% endif %}
+{% if fabric.switches %}
+! BEGIN SWITCHES
+{% for switch in fabric.switches %}
+{% include "switch.j2" %}
+{% endfor %}
+! END SWITCHES
+{% endif %}
+{% if fabric.interfaces %}
+! BEGIN INTERFACES
+{% for interface in fabric.interfaces %}
+{% if interface.role == "filter" %}
+{% include "interface_filter.j2" %}
+{% elif interface.role == "delivery" %}
+{% include "interface_delivery.j2" %}
+{% else %}
+{% include "interface_both.j2" %}
+{% endif %}
+{% endfor %}
+! END INTERFACES
+{% endif %}
+{% if fabric.groups %}
+! BEGIN GROUPS
+{% for group in fabric.groups %}
+{% include "interface_group.j2" %}
+{% endfor %}
+! END GROUPS
+{% endif %}
+{% if fabric.service_nodes %}
+! BEGIN SERVICE NODES
+{% for node in fabric.service_nodes %}
+{% include "service_node.j2" %}
+{% endfor %}
+! END SERVICE NODES
+{% endif %}
+{% if fabric.analytics_nodes %}
+! BEGIN ANALYTICS NODES
+{% for node in fabric.analytics_nodes %}
+{% include "analytics_node.j2" %}
+{% endfor %}
+! END ANALYTICS NODES
+{% endif %}
+{% if fabric.recorder_nodes %}
+! BEGIN RECORDER NODES
+{% for node in fabric.recorder_nodes %}
+{% include "recorder_node.j2" %}
+{% endfor %}
+! END RECORDER NODES
+{% endif %}
+! BEGIN FABRIC SETTINGS
+{% include "fabric_settings.j2" %}
+! END FABRIC SETTINGS
+{% if fabric.policies %}
+! BEGIN POLICIES
+{% for policy in fabric.policies %}
+{% include "policy.j2" %}
+{% endfor %}
+! END POLICIES
+{% endif %}

@@ -1,0 +1,7 @@
+interface-group {{ group.name }}
+  role {{ group.role }}
+  {% if group.description %}description {{ group.description }}{% endif %}
+{% for member in group.members %}
+  member {{ member }}
+{% endfor %}
+exit

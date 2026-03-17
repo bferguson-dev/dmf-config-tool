@@ -1,0 +1,13 @@
+policy {{ policy.name }}
+  priority {{ policy.priority }}
+  action {{ policy.action }}
+  enabled {{ "true" if policy.enabled else "false" }}
+  {% if policy.description %}description {{ policy.description }}{% endif %}
+  {% if policy.source_interface %}source-interface {{ policy.source_interface }}{% endif %}
+  {% if policy.source_group %}source-group {{ policy.source_group }}{% endif %}
+  {% if policy.delivery_interface %}delivery-interface {{ policy.delivery_interface }}{% endif %}
+  {% if policy.delivery_group %}delivery-group {{ policy.delivery_group }}{% endif %}
+{% for match_rule in policy.match_rules %}
+{% include "match_rule.j2" %}
+{% endfor %}
+exit

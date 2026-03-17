@@ -1,0 +1,7 @@
+fabric-settings {{ fabric.fabric_settings.fabric_name }}
+  {% if fabric.fabric_settings.syslog_server %}syslog {{ fabric.fabric_settings.syslog_server }}{% endif %}
+  {% if fabric.fabric_settings.ntp_server %}ntp {{ fabric.fabric_settings.ntp_server }}{% endif %}
+  {% if fabric.fabric_settings.snmp_community %}snmp-community {{ fabric.fabric_settings.snmp_community }}{% endif %}
+  {% if fabric.fabric_settings.enable_password %}enable-password {{ fabric.fabric_settings.enable_password }}{% endif %}
+  {% if fabric.fabric_settings.api_token %}api-token {{ fabric.fabric_settings.api_token }}{% endif %}
+exit

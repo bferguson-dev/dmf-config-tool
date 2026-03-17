@@ -1,1 +1,60 @@
-
+! BEGIN CONTROLLERS
+controller controller-a
+  management-ip 10.0.0.10
+  cluster-name cluster-a
+  role active
+ha-peer controller-b  site site-a
+description primaryexitcontroller controller-b
+  management-ip 10.0.0.11
+  cluster-name cluster-a
+  role standby
+ha-peer controller-a  site site-a
+exit! END CONTROLLERS
+! BEGIN SWITCHES
+switch leaf-1
+  management-ip 10.0.0.1
+  role filter
+  site site-a
+model 7050exitswitch leaf-2
+  management-ip 10.0.0.2
+  role delivery
+  site site-a
+exit! END SWITCHES
+! BEGIN INTERFACES
+interface leaf-1 ethernet1
+  role filter
+description capturespeed 10gvlan 100  enabled true
+exitinterface leaf-2 ethernet2
+  role delivery
+description toolspeed 10g  enabled true
+exit! END INTERFACES
+! BEGIN GROUPS
+interface-group collectors
+  role filter
+  member leaf-1:ethernet1
+exit! END GROUPS
+! BEGIN SERVICE NODES
+service-node service-a
+  switch leaf-1
+  interface ethernet1
+management-ip 10.0.0.20exit! END SERVICE NODES
+! BEGIN ANALYTICS NODES
+analytics-node analytics-a
+  switch leaf-1
+  interface ethernet1
+management-ip 10.0.0.21exit! END ANALYTICS NODES
+! BEGIN RECORDER NODES
+recorder-node recorder-a
+  switch leaf-1
+  interface ethernet1
+management-ip 10.0.0.22exit! END RECORDER NODES
+! BEGIN FABRIC SETTINGS
+fabric-settings fabric-a
+syslog 10.0.0.30ntp 10.0.0.31snmp-community **********enable-password **********api-token **********exit! END FABRIC SETTINGS
+! BEGIN POLICIES
+policy policy-a
+  priority 100
+  action forward
+  enabled true
+description mirror trafficsource-interface leaf-1:ethernet1delivery-interface leaf-2:ethernet2  match-rule 10
+source-ip 10.0.0.1destination-ip 10.0.0.2source-port 80destination-port 443vlan 100protocol tcp  exitexit! END POLICIES

@@ -1,0 +1,7 @@
+interface {{ interface.switch_name }} {{ interface.name }}
+  role filter
+  {% if interface.description %}description {{ interface.description }}{% endif %}
+  {% if interface.speed %}speed {{ interface.speed }}{% endif %}
+  {% if interface.vlan_id %}vlan {{ interface.vlan_id }}{% endif %}
+  enabled {{ "true" if interface.enabled else "false" }}
+exit
