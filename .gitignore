@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version.local
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.tox/
+dist/
+build/
+*.egg-info/
+
+# uv
+.uv/
+uv.lock
+
+# Runtime directories
+input/
+output/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Windows ADS artifacts
+*.Zone.Identifier

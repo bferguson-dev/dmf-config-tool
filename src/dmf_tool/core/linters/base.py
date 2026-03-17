@@ -1,0 +1,1 @@
+"""Base linter definitions."""
