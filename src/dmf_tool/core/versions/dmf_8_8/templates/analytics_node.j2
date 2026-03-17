@@ -1,6 +1,10 @@
 analytics-node {{ node.name }}
   switch {{ node.switch_name }}
   interface {{ node.interface_name }}
-  {% if node.management_ip %}management-ip {{ node.management_ip }}{% endif %}
-  {% if node.description %}description {{ node.description }}{% endif %}
+{% if node.management_ip %}
+  management-ip {{ node.management_ip }}
+{% endif %}
+{% if node.description %}
+  description {{ node.description }}
+{% endif %}
 exit

@@ -1,8 +1,10 @@
 {% include "provenance_header.j2" %}
+
 {% if fabric.controllers %}
 ! BEGIN CONTROLLERS
 {% for controller in fabric.controllers %}
 {% include "controller.j2" %}
+
 {% endfor %}
 ! END CONTROLLERS
 {% endif %}
@@ -10,6 +12,7 @@
 ! BEGIN SWITCHES
 {% for switch in fabric.switches %}
 {% include "switch.j2" %}
+
 {% endfor %}
 ! END SWITCHES
 {% endif %}
@@ -23,6 +26,7 @@
 {% else %}
 {% include "interface_both.j2" %}
 {% endif %}
+
 {% endfor %}
 ! END INTERFACES
 {% endif %}
@@ -30,6 +34,7 @@
 ! BEGIN GROUPS
 {% for group in fabric.groups %}
 {% include "interface_group.j2" %}
+
 {% endfor %}
 ! END GROUPS
 {% endif %}
@@ -37,6 +42,7 @@
 ! BEGIN SERVICE NODES
 {% for node in fabric.service_nodes %}
 {% include "service_node.j2" %}
+
 {% endfor %}
 ! END SERVICE NODES
 {% endif %}
@@ -44,6 +50,7 @@
 ! BEGIN ANALYTICS NODES
 {% for node in fabric.analytics_nodes %}
 {% include "analytics_node.j2" %}
+
 {% endfor %}
 ! END ANALYTICS NODES
 {% endif %}
@@ -51,16 +58,19 @@
 ! BEGIN RECORDER NODES
 {% for node in fabric.recorder_nodes %}
 {% include "recorder_node.j2" %}
+
 {% endfor %}
 ! END RECORDER NODES
 {% endif %}
 ! BEGIN FABRIC SETTINGS
 {% include "fabric_settings.j2" %}
+
 ! END FABRIC SETTINGS
 {% if fabric.policies %}
 ! BEGIN POLICIES
 {% for policy in fabric.policies %}
 {% include "policy.j2" %}
+
 {% endfor %}
 ! END POLICIES
 {% endif %}

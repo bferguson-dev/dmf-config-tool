@@ -141,7 +141,9 @@ class SemanticLinter(BaseLinter):
         findings: list[LintResult] = []
         roles_by_key: dict[str, set[str]] = defaultdict(set)
         for interface in fabric.interfaces:
-            roles_by_key[f"{interface.switch_name}:{interface.name}"].add(interface.role)
+            roles_by_key[f"{interface.switch_name}:{interface.name}"].add(
+                interface.role
+            )
         for interface_key, roles in roles_by_key.items():
             if len(roles) > 1:
                 findings.append(

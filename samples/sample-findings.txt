@@ -1,0 +1,9 @@
+BPR002 WARNING interfaces
+  Field:   description
+  Value:   "leaf-filter-2:ethernet1"
+  Message: Interface is enabled without a description.
+  Fix:     Add an operator-facing description for future troubleshooting.
+
+OUT001 INFO output
+  Message: Redacted config artifact was generated because secret fields were present.
+  Fix:     Review cli-config-redacted.txt for sharing and cli-config.txt only when applying.

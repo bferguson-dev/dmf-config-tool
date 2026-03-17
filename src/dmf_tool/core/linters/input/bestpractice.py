@@ -13,9 +13,7 @@ class BestPracticeLinter(BaseLinter):
 
     def run(self, fabric: Fabric) -> list[LintResult]:
         findings: list[LintResult] = []
-        all_traffic_message = (
-            "Policy has no match rules and will forward all traffic."
-        )
+        all_traffic_message = "Policy has no match rules and will forward all traffic."
         unused_switch_suggestion = (
             "Assign interfaces or remove the unused switch definition."
         )

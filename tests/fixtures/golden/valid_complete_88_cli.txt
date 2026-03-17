@@ -3,58 +3,97 @@ controller controller-a
   management-ip 10.0.0.10
   cluster-name cluster-a
   role active
-ha-peer controller-b  site site-a
-description primaryexitcontroller controller-b
+  ha-peer controller-b
+  site site-a
+  description primary
+exit
+controller controller-b
   management-ip 10.0.0.11
   cluster-name cluster-a
   role standby
-ha-peer controller-a  site site-a
-exit! END CONTROLLERS
+  ha-peer controller-a
+  site site-a
+exit
+! END CONTROLLERS
 ! BEGIN SWITCHES
 switch leaf-1
   management-ip 10.0.0.1
   role filter
   site site-a
-model 7050exitswitch leaf-2
+  model 7050
+exit
+switch leaf-2
   management-ip 10.0.0.2
   role delivery
   site site-a
-exit! END SWITCHES
+exit
+! END SWITCHES
 ! BEGIN INTERFACES
 interface leaf-1 ethernet1
   role filter
-description capturespeed 10gvlan 100  enabled true
-exitinterface leaf-2 ethernet2
+  description capture
+  speed 10g
+  vlan 100
+  enabled true
+exit
+interface leaf-2 ethernet2
   role delivery
-description toolspeed 10g  enabled true
-exit! END INTERFACES
+  description tool
+  speed 10g
+  enabled true
+exit
+! END INTERFACES
 ! BEGIN GROUPS
 interface-group collectors
   role filter
   member leaf-1:ethernet1
-exit! END GROUPS
+exit
+! END GROUPS
 ! BEGIN SERVICE NODES
 service-node service-a
   switch leaf-1
   interface ethernet1
-management-ip 10.0.0.20exit! END SERVICE NODES
+  management-ip 10.0.0.20
+exit
+! END SERVICE NODES
 ! BEGIN ANALYTICS NODES
 analytics-node analytics-a
   switch leaf-1
   interface ethernet1
-management-ip 10.0.0.21exit! END ANALYTICS NODES
+  management-ip 10.0.0.21
+exit
+! END ANALYTICS NODES
 ! BEGIN RECORDER NODES
 recorder-node recorder-a
   switch leaf-1
   interface ethernet1
-management-ip 10.0.0.22exit! END RECORDER NODES
+  management-ip 10.0.0.22
+exit
+! END RECORDER NODES
 ! BEGIN FABRIC SETTINGS
 fabric-settings fabric-a
-syslog 10.0.0.30ntp 10.0.0.31snmp-community **********enable-password **********api-token **********exit! END FABRIC SETTINGS
+  syslog 10.0.0.30
+  ntp 10.0.0.31
+  snmp-community public
+  enable-password generated-enable
+  api-token generated-token
+exit
+! END FABRIC SETTINGS
 ! BEGIN POLICIES
 policy policy-a
   priority 100
   action forward
   enabled true
-description mirror trafficsource-interface leaf-1:ethernet1delivery-interface leaf-2:ethernet2  match-rule 10
-source-ip 10.0.0.1destination-ip 10.0.0.2source-port 80destination-port 443vlan 100protocol tcp  exitexit! END POLICIES
+  description mirror traffic
+  source-interface leaf-1:ethernet1
+  delivery-interface leaf-2:ethernet2
+  match-rule 10
+    source-ip 10.0.0.1
+    destination-ip 10.0.0.2
+    source-port 80
+    destination-port 443
+    vlan 100
+    protocol tcp
+  exit
+exit
+! END POLICIES

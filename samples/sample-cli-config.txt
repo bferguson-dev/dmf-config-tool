@@ -1,0 +1,177 @@
+! SENSITIVE
+! ============================================================
+! DMF Configuration Generator - Generated Configuration
+! Tool Version:         0.1.0
+! Template Bundle:      8.8
+! Workbook Schema:      1.0
+! Target DMF Version:   8.8
+! Generated:            2026-03-17T14:32:01
+! Input Hash:           8a57053531f76b9409f24c787a3be1173429e17f028958c30578045fd7165060
+! Findings:             0 errors, 0 warnings
+! ------------------------------------------------------------
+! SOURCE OF TRUTH: The input workbook is the source of truth.
+! This artifact is disposable. Manual edits are unsupported
+! drift. Regenerate from the workbook to produce a new config.
+! ============================================================
+! BEGIN CONTROLLERS
+controller controller-a
+  management-ip 10.20.0.10
+  cluster-name cluster-a
+  role active
+  ha-peer controller-b
+  site site-hq
+  description primary controller
+exit
+controller controller-b
+  management-ip 10.20.0.11
+  cluster-name cluster-a
+  role standby
+  ha-peer controller-a
+  site site-hq
+  description standby controller
+exit
+! END CONTROLLERS
+! BEGIN SWITCHES
+switch leaf-delivery-1
+  management-ip 10.20.1.21
+  role delivery
+  site site-hq
+  model 7050sx3
+  description tool delivery leaf
+exit
+switch leaf-filter-1
+  management-ip 10.20.1.11
+  role filter
+  site site-hq
+  model 7050sx3
+  description packet broker filter leaf
+exit
+switch leaf-filter-2
+  management-ip 10.20.1.12
+  role filter
+  site site-hq
+  model 7050sx3
+  description secondary filter leaf
+exit
+! END SWITCHES
+! BEGIN INTERFACES
+interface leaf-delivery-1 ethernet10
+  role delivery
+  description ids handoff
+  speed 10g
+  enabled true
+exit
+interface leaf-delivery-1 ethernet11
+  role delivery
+  description recorder handoff
+  speed 10g
+  enabled true
+exit
+interface leaf-filter-1 ethernet1
+  role filter
+  description ingress tap a
+  speed 10g
+  vlan 110
+  enabled true
+exit
+interface leaf-filter-1 ethernet2
+  role filter
+  description ingress tap b
+  speed 10g
+  vlan 120
+  enabled true
+exit
+interface leaf-filter-2 ethernet1
+  role filter
+  description ingress tap c
+  speed 10g
+  vlan 130
+  enabled true
+exit
+! END INTERFACES
+! BEGIN GROUPS
+interface-group branch-ingress
+  role filter
+  description all branch ingress taps
+  member leaf-filter-1:ethernet1
+  member leaf-filter-1:ethernet2
+  member leaf-filter-2:ethernet1
+exit
+interface-group security-tools
+  role delivery
+  description security monitoring tools
+  member leaf-delivery-1:ethernet10
+  member leaf-delivery-1:ethernet11
+exit
+! END GROUPS
+! BEGIN SERVICE NODES
+service-node service-inspect-a
+  switch leaf-delivery-1
+  interface ethernet10
+  management-ip 10.20.2.10
+  description ssl decrypt cluster
+exit
+! END SERVICE NODES
+! BEGIN ANALYTICS NODES
+analytics-node analytics-a
+  switch leaf-delivery-1
+  interface ethernet10
+  management-ip 10.20.2.20
+  description analytics appliance
+exit
+! END ANALYTICS NODES
+! BEGIN RECORDER NODES
+recorder-node recorder-a
+  switch leaf-delivery-1
+  interface ethernet11
+  management-ip 10.20.2.30
+  description forensics recorder
+exit
+! END RECORDER NODES
+! BEGIN FABRIC SETTINGS
+fabric-settings fabric-hq
+  syslog 10.20.0.30
+  ntp 10.20.0.31
+  snmp-community public-hq
+  enable-password enable-hq
+  api-token token-hq
+exit
+! END FABRIC SETTINGS
+! BEGIN POLICIES
+policy branch-to-ids
+  priority 100
+  action forward
+  enabled true
+  description send branch traffic to ids
+  source-group branch-ingress
+  delivery-interface leaf-delivery-1:ethernet10
+  match-rule 10
+    source-ip 10.0.0.0/8
+    destination-ip 172.16.0.0/12
+    source-port 443
+    destination-port 443
+    vlan 110
+    protocol tcp
+  exit
+  match-rule 20
+    source-ip 10.0.0.0/8
+    destination-ip 192.168.0.0/16
+    source-port 53
+    destination-port 53
+    vlan 120
+    protocol udp
+  exit
+exit
+policy branch-to-recorder
+  priority 200
+  action forward
+  enabled true
+  description record branch traffic
+  source-group branch-ingress
+  delivery-interface leaf-delivery-1:ethernet11
+  match-rule 10
+    source-ip 10.0.0.0/8
+    destination-ip 0.0.0.0/0
+  exit
+exit
+! END POLICIES

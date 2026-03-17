@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
+
 from dmf_tool.core.linters.base import BaseLinter, LintResult, Severity
 from dmf_tool.core.models.fabric import Fabric
 
 
-def _count_occurrences(rendered_text: str, marker: str) -> int:
-    return rendered_text.count(marker)
+def _count_block_occurrences(rendered_text: str, prefix: str, name: str) -> int:
+    pattern = re.compile(rf"^{re.escape(prefix)} {re.escape(name)}$", re.MULTILINE)
+    return len(pattern.findall(rendered_text))
 
 
 class CompletenessLinter(BaseLinter):
@@ -59,7 +62,7 @@ class CompletenessLinter(BaseLinter):
         for switch in fabric.switches:
             if (
                 switch.name not in interface_switches
-                and f"switch {switch.name}" in rendered_text
+                and _count_block_occurrences(rendered_text, "switch", switch.name) >= 1
             ):
                 findings.append(
                     LintResult(
@@ -83,7 +86,7 @@ class CompletenessLinter(BaseLinter):
     ) -> list[LintResult]:
         findings: list[LintResult] = []
         for policy in fabric.policies:
-            if f"policy {policy.name}" not in rendered_text:
+            if _count_block_occurrences(rendered_text, "policy", policy.name) == 0:
                 findings.append(
                     self._missing_section("OUT005", f"policy {policy.name}")
                 )
@@ -96,7 +99,7 @@ class CompletenessLinter(BaseLinter):
     ) -> list[LintResult]:
         findings: list[LintResult] = []
         for switch in fabric.switches:
-            if _count_occurrences(rendered_text, f"switch {switch.name}") > 1:
+            if _count_block_occurrences(rendered_text, "switch", switch.name) > 1:
                 findings.append(
                     LintResult(
                         severity=Severity.ERROR,
@@ -109,7 +112,7 @@ class CompletenessLinter(BaseLinter):
                     )
                 )
         for policy in fabric.policies:
-            if _count_occurrences(rendered_text, f"policy {policy.name}") > 1:
+            if _count_block_occurrences(rendered_text, "policy", policy.name) > 1:
                 findings.append(
                     LintResult(
                         severity=Severity.ERROR,

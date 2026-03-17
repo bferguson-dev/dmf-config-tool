@@ -1,8 +1,20 @@
   match-rule {{ match_rule.sequence }}
-    {% if match_rule.source_ip %}source-ip {{ match_rule.source_ip }}{% endif %}
-    {% if match_rule.destination_ip %}destination-ip {{ match_rule.destination_ip }}{% endif %}
-    {% if match_rule.source_port %}source-port {{ match_rule.source_port }}{% endif %}
-    {% if match_rule.destination_port %}destination-port {{ match_rule.destination_port }}{% endif %}
-    {% if match_rule.vlan_id %}vlan {{ match_rule.vlan_id }}{% endif %}
-    {% if match_rule.protocol %}protocol {{ match_rule.protocol }}{% endif %}
+{% if match_rule.source_ip %}
+    source-ip {{ match_rule.source_ip }}
+{% endif %}
+{% if match_rule.destination_ip %}
+    destination-ip {{ match_rule.destination_ip }}
+{% endif %}
+{% if match_rule.source_port %}
+    source-port {{ match_rule.source_port }}
+{% endif %}
+{% if match_rule.destination_port %}
+    destination-port {{ match_rule.destination_port }}
+{% endif %}
+{% if match_rule.vlan_id %}
+    vlan {{ match_rule.vlan_id }}
+{% endif %}
+{% if match_rule.protocol %}
+    protocol {{ match_rule.protocol }}
+{% endif %}
   exit
