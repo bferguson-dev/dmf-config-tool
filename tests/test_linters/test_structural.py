@@ -1,5 +1,9 @@
 """Structural linter tests."""
 
+from __future__ import annotations
+
+from collections.abc import Callable
+
 import pytest
 from pydantic import ValidationError
 
@@ -8,6 +12,13 @@ from dmf_tool.core.linters.base import (
     BaseLinter,
     LintResult,
     Severity,
+)
+from dmf_tool.core.linters.input.structural import StructuralLinter
+from dmf_tool.core.models.workbook import (
+    RawFabricSettings,
+    RawInterface,
+    RawSwitch,
+    RawWorkbook,
 )
 
 
@@ -118,3 +129,60 @@ def test_base_linter_run_contract_returns_findings() -> None:
     assert len(findings) == 1
     assert findings[0].code == "STR001"
     assert FINDING_CODE_PREFIXES["STR"] == "Structural"
+
+
+def _valid_workbook() -> RawWorkbook:
+    return RawWorkbook(
+        dmf_version="8.8",
+        workbook_schema_version="1.0",
+        switches=[RawSwitch(name="leaf-1")],
+        interfaces=[RawInterface(switch_name="leaf-1", name="ethernet1")],
+        fabric_settings=RawFabricSettings(fabric_name="fabric-a"),
+    )
+
+
+def test_structural_linter_passes_valid_workbook() -> None:
+    assert StructuralLinter().run(_valid_workbook()) == []
+
+
+def _clear_switches(workbook: RawWorkbook) -> None:
+    workbook.switches = []
+
+
+def _clear_interfaces(workbook: RawWorkbook) -> None:
+    workbook.interfaces = []
+
+
+def _clear_schema_version(workbook: RawWorkbook) -> None:
+    workbook.workbook_schema_version = ""
+
+
+def _set_bad_schema_version(workbook: RawWorkbook) -> None:
+    workbook.workbook_schema_version = "9.9"
+
+
+def _clear_fabric_settings(workbook: RawWorkbook) -> None:
+    workbook.fabric_settings = None
+
+
+@pytest.mark.parametrize(
+    ("mutator", "code"),
+    [
+        (_clear_switches, "STR001"),
+        (_clear_interfaces, "STR002"),
+        (_clear_schema_version, "STR003"),
+        (_set_bad_schema_version, "STR004"),
+        (_clear_fabric_settings, "STR005"),
+    ],
+)
+def test_structural_linter_reports_expected_codes(
+    mutator: Callable[[RawWorkbook], None],
+    code: str,
+) -> None:
+    workbook = _valid_workbook()
+    mutator(workbook)
+
+    findings = StructuralLinter().run(workbook)
+
+    assert any(finding.code == code for finding in findings)
+    assert all(finding.suggestion for finding in findings)

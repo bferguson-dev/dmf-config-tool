@@ -25,8 +25,8 @@ build/
 uv.lock
 
 # Runtime directories
-input/
-output/
+/input/
+/output/
 
 # OS/editor noise
 .DS_Store

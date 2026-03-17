@@ -1,9 +1,23 @@
 """Semantic linter tests."""
 
+from __future__ import annotations
+
+from ipaddress import ip_address
 from pathlib import Path
 
 import pytest
 
+from dmf_tool.core.linters.input.semantic import SemanticLinter
+from dmf_tool.core.models.fabric import (
+    Controller,
+    Fabric,
+    FabricSettings,
+    Interface,
+    InterfaceGroup,
+    Policy,
+    Site,
+    Switch,
+)
 from dmf_tool.core.versions.base import VersionBundle
 from dmf_tool.core.versions.dmf_8_6 import BUNDLE as DMF86_BUNDLE
 from dmf_tool.core.versions.dmf_8_7 import BUNDLE as DMF87_BUNDLE
@@ -62,3 +76,142 @@ def test_bundles_are_not_interchangeable() -> None:
     assert registry.is_supported("8.5") is False
     assert DMF86_BUNDLE is not DMF87_BUNDLE
     assert DMF87_BUNDLE is not DMF88_BUNDLE
+
+
+def _valid_fabric() -> Fabric:
+    return Fabric(
+        dmf_version="8.8",
+        controllers=[
+            Controller(
+                name="controller-a",
+                management_ip=ip_address("10.0.0.10"),
+                cluster_name="cluster-a",
+                role="active",
+                ha_peer="controller-b",
+                site_name="site-a",
+            ),
+            Controller(
+                name="controller-b",
+                management_ip=ip_address("10.0.0.11"),
+                cluster_name="cluster-a",
+                role="standby",
+                ha_peer="controller-a",
+                site_name="site-a",
+            ),
+        ],
+        switches=[
+            Switch(
+                name="leaf-1",
+                management_ip=ip_address("10.0.0.1"),
+                role="filter",
+                site_name="site-a",
+            ),
+            Switch(
+                name="leaf-2",
+                management_ip=ip_address("10.0.0.2"),
+                role="delivery",
+                site_name="site-a",
+            ),
+        ],
+        interfaces=[
+            Interface(switch_name="leaf-1", name="ethernet1", role="filter"),
+            Interface(switch_name="leaf-2", name="ethernet2", role="delivery"),
+        ],
+        groups=[
+            InterfaceGroup(
+                name="group-filter",
+                role="filter",
+                members=["leaf-1:ethernet1"],
+            ),
+            InterfaceGroup(
+                name="group-delivery",
+                role="delivery",
+                members=["leaf-2:ethernet2"],
+            ),
+        ],
+        policies=[
+            Policy(
+                name="policy-a",
+                priority=100,
+                source_interface="leaf-1:ethernet1",
+                delivery_interface="leaf-2:ethernet2",
+                action="forward",
+            )
+        ],
+        service_nodes=[],
+        analytics_nodes=[],
+        recorder_nodes=[],
+        fabric_settings=FabricSettings(fabric_name="fabric-a"),
+        sites=[Site(name="site-a")],
+    )
+
+
+def test_semantic_linter_passes_valid_fabric() -> None:
+    assert SemanticLinter(DMF88_BUNDLE).run(_valid_fabric()) == []
+
+
+def test_semantic_linter_reports_role_incompatibility() -> None:
+    fabric = _valid_fabric()
+    fabric.interfaces[0].role = "delivery"
+
+    findings = SemanticLinter(DMF88_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM001" for finding in findings)
+
+
+def test_semantic_linter_reports_group_role_mismatch() -> None:
+    fabric = _valid_fabric()
+    fabric.groups[0].members.append("leaf-2:ethernet2")
+
+    findings = SemanticLinter(DMF88_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM002" for finding in findings)
+
+
+def test_semantic_linter_reports_conflicting_interface_roles() -> None:
+    fabric = _valid_fabric()
+    fabric.interfaces.append(
+        Interface(switch_name="leaf-1", name="ethernet1", role="delivery")
+    )
+
+    findings = SemanticLinter(DMF88_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM003" for finding in findings)
+
+
+def test_semantic_linter_reports_incomplete_ha_pair() -> None:
+    fabric = _valid_fabric()
+    fabric.controllers = fabric.controllers[:1]
+
+    findings = SemanticLinter(DMF88_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM004" for finding in findings)
+
+
+def test_semantic_linter_reports_capacity_limit_violation() -> None:
+    fabric = _valid_fabric()
+    fabric.policies = [
+        Policy(name=f"policy-{index}", priority=index + 1, action="forward")
+        for index in range(DMF86_BUNDLE.limits["max_policies"] + 1)
+    ]
+
+    findings = SemanticLinter(DMF86_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM005" for finding in findings)
+
+
+def test_semantic_linter_reports_unsupported_feature() -> None:
+    fabric = _valid_fabric()
+    fabric.analytics_nodes.append(
+        type("AnalyticsNodeShim", (), {"name": "shim"})()  # type: ignore[list-item]
+    )
+
+    findings = SemanticLinter(DMF87_BUNDLE).run(fabric)
+
+    assert any(finding.code == "SEM006" for finding in findings)
+
+
+def test_semantic_linter_loads_bundle_rules() -> None:
+    findings = SemanticLinter(DMF88_BUNDLE).run(_valid_fabric())
+
+    assert findings == []
