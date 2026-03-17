@@ -10,3 +10,4 @@ def test_cli_help_renders() -> None:
     result = CliRunner().invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "Run the DMF tool command group." in result.output
+    assert "Usage:" in result.output
