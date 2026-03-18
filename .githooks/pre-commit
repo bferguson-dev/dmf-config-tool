@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+RUN_GIT_CHECKS=1 \
+RUN_GIT_SECRETS_CACHED=1 \
+RUN_GIT_SECRETS_HISTORY=0 \
+FAIL_ON_UNSTAGED_CHANGES=0 \
+./check.sh

@@ -37,3 +37,9 @@ Thumbs.db
 
 # Windows ADS artifacts
 *.Zone.Identifier
+
+# Local agent notes and handoff files
+HANDOFF.md
+RESUME_NOTE.md
+SESSION_NOTES.md
+*-handoff.md

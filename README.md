@@ -1,32 +1,48 @@
+*[!] This project has not been tested in a production environment. You are responsible for validating, understanding, and testing it in your own environment before any real-world use. [!]*
+
 # DMF Config Tool
 
-DMF Config Tool is an offline workbook-to-CLI generator for Arista DANZ Monitoring Fabric deployments. An operator fills out a site-specific Excel workbook, the tool validates that input against structural, semantic, and version-specific rules, and it renders an ordered DMF CLI artifact for manual review and manual application.
+DMF Config Tool is an offline workbook-to-CLI generator for Arista DANZ
+Monitoring Fabric deployments. It validates a site-specific Excel workbook,
+normalizes the workbook into canonical fabric models, and renders DMF CLI
+artifacts for manual review and manual application.
 
-## Why This Exists
+See [DISCLAIMER.md](./DISCLAIMER.md) for the full repository disclaimer.
 
-DMF configuration is order-dependent and operationally sensitive. Controllers, switches, interfaces, groups, and policies all reference one another, so a typo or wrong command order can produce invalid or unsafe configuration. This tool reduces that risk by turning a checked workbook into deterministic CLI output.
+## Overview
 
-## Offline Trust Boundary
+DMF configuration is order-dependent and operationally sensitive. Controllers,
+switches, interfaces, groups, and policies all reference one another, so a
+typo or wrong command order can produce invalid or unsafe configuration. This
+tool reduces that risk by turning a checked workbook into deterministic CLI
+output and by writing review artifacts alongside the rendered configuration.
 
-This project is intentionally offline. It does not talk to a controller, it does not call cloud APIs, and it does not fetch remote templates or rules. The workbook enters the tool locally, the generated artifacts leave the tool locally, and the operator remains responsible for reviewing and applying the resulting configuration manually.
+The tool is intentionally offline. It does not connect to a controller, does
+not call cloud APIs, and does not fetch remote templates or rules.
 
-## Scope
+## Non-Goals
 
-What the tool does:
+This tool does not:
 
-- Accepts `.xlsx` workbooks that follow the expected tab layout
-- Rejects unsupported workbook constructs such as macros, hidden sheets, and formulas
-- Parses workbook rows into raw models and normalizes them into canonical fabric models
-- Runs structural, schema, relational, semantic, best-practice, and output-verification checks
-- Renders DMF CLI configuration for supported DMF versions
-- Writes findings and operator-facing artifacts to disk
+- push configuration to DMF
+- provide a web UI
+- store run history in a database
+- diff existing controller state against a workbook
+- implement V2 workflow features such as tunnels
 
-What the tool does not do:
+## Requirements
 
-- It does not send configuration to DMF
-- It does not use any network connectivity
-- It does not store run history in a database
-- It does not implement V2 features such as tunnels, diffing, or a web UI
+- Python `3.12`
+- `uv`
+- a workbook saved as plain `.xlsx`
+- a local environment where generated artifacts can be reviewed safely
+
+## Assumptions
+
+- Operators review generated CLI before using it.
+- Operators apply configuration manually through their existing DMF workflow.
+- Input workbooks follow the expected tab structure and version metadata rules.
+- Sensitive values may appear in the workbook and in `cli-config.txt`.
 
 ## Supported DMF Versions
 
@@ -36,35 +52,29 @@ What the tool does not do:
 | `8.7` | `>=1.0` | Reuses `8.8` templates conservatively | Feature and limit checks come from the `8.7` bundle |
 | `8.8` | `>=1.0` | Native `8.8` templates | Full current bundle |
 
-## Installation
+## Setup
 
-Python `3.12.3` is the pinned development/runtime target in this repository.
+1. Install Python `3.12`.
+2. Install `uv` if it is not already available.
+3. Sync the project dependencies:
 
 ```bash
 uv sync --all-extras --dev
 ```
 
-The CLI entry point is:
+4. Optionally install the repo hook path so pre-commit runs the local gate:
 
 ```bash
-uv run dmf-tool --help
+git config core.hooksPath .githooks
 ```
 
-## Quickstart
+## Usage
 
-1. Prepare an input workbook that follows the expected tab structure.
+1. Prepare an input workbook that follows the expected tab layout.
 2. Run validation first.
-3. Run generation only after errors are cleared.
-4. Review `findings.txt`, `summary.md`, and `cli-config-redacted.txt` before using the sensitive config artifact.
-
-Example:
-
-```bash
-uv run dmf-tool validate --input ./samples/sample-workbook.xlsx --dmf-version 8.8
-uv run dmf-tool generate --input ./samples/sample-workbook.xlsx --dmf-version 8.8 --output ./output
-```
-
-## CLI Reference
+3. Run `check` if you want the full render pipeline without file writes.
+4. Run generation only after errors are cleared.
+5. Review the generated artifacts before using the sensitive output.
 
 List supported versions:
 
@@ -87,18 +97,16 @@ uv run dmf-tool check --input ./samples/sample-workbook.xlsx --dmf-version 8.8
 Generate artifacts:
 
 ```bash
-uv run dmf-tool generate --input ./samples/sample-workbook.xlsx --dmf-version 8.8 --output ./output
+uv run dmf-tool generate \
+  --input ./samples/sample-workbook.xlsx \
+  --dmf-version 8.8 \
+  --output ./output
 ```
 
-Exit codes:
+## Input Workbook Expectations
 
-- `0` success with no errors
-- `1` findings with `ERROR` severity present
-- `2` bad CLI arguments or unexpected tool failure
-
-## Input Workbook Guide
-
-The workbook must be a plain `.xlsx` file with a `metadata` tab and the following data tabs:
+The workbook must be a plain `.xlsx` file with a `metadata` tab and the
+following data tabs:
 
 | Tab | Purpose |
 | --- | --- |
@@ -125,21 +133,95 @@ Rejected workbook characteristics include:
 - oversized workbooks
 - corrupt zip structure
 
-## Output Artifacts
+## Expected Output
 
-| Artifact | Always Written | Sensitivity | Purpose |
+Exit codes:
+
+- `0`: success with no blocking errors
+- `1`: findings with `ERROR` severity present
+- `2`: bad CLI arguments or unexpected tool failure
+
+Generated artifacts:
+
+| Artifact | When Written | Sensitivity | Purpose |
 | --- | --- | --- | --- |
-| `findings.json` | Yes | Non-sensitive | Machine-readable findings |
-| `findings.txt` | Yes | Non-sensitive | Human-readable findings |
+| `findings.json` | Always | Non-sensitive | Machine-readable findings |
+| `findings.txt` | Always | Non-sensitive | Human-readable findings |
 | `cli-config.txt` | Success only | Sensitive | Real rendered CLI with secrets present |
 | `cli-config-redacted.txt` | Success only, when secrets exist | Non-sensitive | Safe review copy with secrets replaced |
 | `summary.md` | Success only | Non-sensitive | Structured operator summary |
 
-## Samples
+## Quality Gate
 
-The [`samples/`](./samples/) directory contains a fictional deployment workbook, matching generated artifacts, and an illustrative findings report that shows the CLI/report format for warning and info-level findings.
+Run the local repo gate before committing:
 
-## Further Reading
+```bash
+./check.sh
+```
 
-- [Architecture](./ARCHITECTURE.md)
-- [Design Decisions](./DESIGN_DECISIONS.md)
+The gate runs:
+
+- staged-diff Git hygiene checks
+- `ruff format --check`
+- `ruff check`
+- `pyright`
+- `pytest`
+- `pip-audit`
+- optional `gitleaks` and `git-secrets` scans when those tools are installed
+- Markdown relative-link validation
+- `pyproject.toml` syntax validation
+
+CI uses the same `./check.sh` entry point.
+
+## Troubleshooting
+
+`uv: command not found`
+: install `uv`, then rerun `uv sync --all-extras --dev`.
+
+`Tool error` from the CLI
+: verify the workbook is a plain `.xlsx` file and that the requested
+  `--dmf-version` appears in `uv run dmf-tool versions`.
+
+Validation fails with structural errors
+: compare the workbook tabs and metadata against the required sheet list above.
+
+Generated output contains only findings artifacts
+: the run hit at least one `ERROR` severity finding, so no CLI artifact was
+  written.
+
+`pip-audit` or secret scanners are unavailable locally
+: the repo gate reports that those checks were skipped; install the missing
+  tools before treating the run as a stronger release signal.
+
+## Recovery And Rollback
+
+- `generate` writes into a timestamped run directory, so a failed run does not
+  overwrite a prior successful run.
+- If a generated artifact set is not acceptable, discard that output directory
+  and rerun with a corrected workbook.
+- The tool does not mutate DMF directly, so rollback of controller state
+  remains an operator responsibility outside this repository.
+
+## Compatibility Notes
+
+- Changes to workbook tab names, metadata keys, or DMF-version handling are
+  compatibility-sensitive for existing operators and sample workbooks.
+- The current command surface is `validate`, `check`, `generate`, and
+  `versions`.
+
+## Known Limitations
+
+- The project is validated locally and in CI, not in a production DMF
+  environment.
+- The tool does not verify generated commands against live controller state.
+- The workflow is file-based and manual by design.
+
+## Samples And Additional Docs
+
+- [`samples/`](./samples/) contains a fictional workbook and representative
+  generated artifacts.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) describes the pipeline shape.
+- [DESIGN_DECISIONS.md](./DESIGN_DECISIONS.md) captures key implementation
+  choices.
+- [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) lists bundled third-party
+  attributions.

@@ -1,0 +1,10 @@
+title = "dmf-config-tool gitleaks config"
+
+[allowlist]
+description = "Allow documentation placeholders and redacted fixtures."
+paths = [
+  '''samples/sample-cli-config\.txt''',
+  '''samples/sample-findings\.txt''',
+  '''samples/sample-summary\.md''',
+  '''tests/fixtures/golden/.*''',
+]
